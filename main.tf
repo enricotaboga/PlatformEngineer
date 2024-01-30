@@ -5,6 +5,11 @@ terraform {
       version = "5.34.0"
     }
   }
+  backend "s3" {
+    key    = "platformengineer-terraform/terraform.tfstate"
+    bucket = "platformengineer-terraform"
+    region = "us-east-1"
+  }
   required_version = ">= 1.0"
 }
 
