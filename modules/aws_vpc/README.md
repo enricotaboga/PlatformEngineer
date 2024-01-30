@@ -1,0 +1,1 @@
+Terraform module to create a VPC, specifying the cidr, azs, subnets and environment.
