@@ -9,6 +9,8 @@ terraform {
     key    = "platformengineer-terraform/terraform.tfstate"
     bucket = "platformengineer-terraform"
     region = "us-east-1"
+    dynamodb_table = "state-locking"
+    encrypt        = true
   }
   required_version = ">= 1.0"
 }
