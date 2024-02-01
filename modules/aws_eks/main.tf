@@ -23,30 +23,24 @@ module "eks" {
   subnet_ids               = var.eks_vpc_subnet_ids
   control_plane_subnet_ids = var.eks_vpc_control_plane_subnet_ids
 
-  # EKS Managed Node Group(s)
-  eks_managed_node_group_defaults = {
-    instance_types = var.eks_instance_types
-  }
-
   eks_managed_node_groups = {
-    blue = {}
     green = {
       min_size     = var.eks_ng_min_size
       max_size     = var.eks_ng_max_size
       desired_size = var.eks_ng_desired_size
 
-      instance_types = ["t3.large"]
-      capacity_type  = "SPOT"
+      instance_types = var.eks_ng_instance_types
+      capacity_type  = var.eks_ng_capacity_type
     }
   }
 
   # Fargate Profile(s)
   fargate_profiles = {
     default = {
-      name = "default"
+      name = var.eks_fargate_name
       selectors = [
         {
-          namespace = "default"
+          namespace = var.eks_fargate_namespace
         }
       ]
     }
@@ -55,34 +49,14 @@ module "eks" {
   # aws-auth configmap
   manage_aws_auth_configmap = true
 
-  aws_auth_roles = [
-    {
-      rolearn  = "arn:aws:iam::66666666666:role/role1"
-      username = "role1"
-      groups   = ["system:masters"]
-    },
-  ]
+  aws_auth_roles = var.eks_aws_auth_roles
 
-  aws_auth_users = [
-    {
-      userarn  = "arn:aws:iam::66666666666:user/user1"
-      username = "user1"
-      groups   = ["system:masters"]
-    },
-    {
-      userarn  = "arn:aws:iam::66666666666:user/user2"
-      username = "user2"
-      groups   = ["system:masters"]
-    },
-  ]
+  aws_auth_users = var.eks_aws_auth_users
 
-  aws_auth_accounts = [
-    "777777777777",
-    "888888888888",
-  ]
+  aws_auth_accounts = var.eks_aws_auth_accounts
 
   tags = {
-    Environment = "dev"
+    Environment = var.eks_tags_environment
     Terraform   = "true"
   }
 }
