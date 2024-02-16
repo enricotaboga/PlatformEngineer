@@ -35,8 +35,8 @@ variable eks_vpc_control_plane_subnet_ids {
 }
 
 variable eks_ng_name {
-  type        = string
-  default     = "my-eks-ng"
+  type        = list(string)
+  default     = ["my-eks-ng"]
   description = "Name for the EKS node group"
 }
 
@@ -59,8 +59,8 @@ variable eks_ng_desired_size {
 }
 
 variable eks_ng_instance_types {
-  type        = string
-  default     = "t4g.small"
+  type        = list(string)
+  default     = ["t4g.small"]
   description = "Instace type for the EKS node group"
 }
 
@@ -88,9 +88,13 @@ variable eks_manage_aws_auth_configmap {
   description = "Enable aws_auth to manage the access control"
 }
 
-variable eks_aws_auth_roles {
-  type        = map(object)
-  default     = [
+variable "eks_aws_auth_roles" {
+  type = set(object({
+      rolearn = string
+      username = string
+      groups = list(string)
+  }))
+  default = [
     {
       rolearn  = "arn:aws:iam::66666666666:role/role1"
       username = "role1"
@@ -100,9 +104,13 @@ variable eks_aws_auth_roles {
   description = "Enable a specific role to access the EKS cluster and sets its permissions"
 }
 
-variable eks_aws_auth_users {
-  type        = map(object)
-  default     = [
+variable "eks_aws_auth_users" {
+  type = set(object({
+      userarn = string
+      username = string
+      groups = list(string)
+  }))
+  default = [
     {
       userarn  = "arn:aws:iam::66666666666:user/user1"
       username = "user1"
@@ -118,7 +126,7 @@ variable eks_aws_auth_accounts {
   description = "Enable a specific accounts to access the EKS cluster and sets its permissions"
 }
 
-variable vpc_tags_environment {
+variable eks_tags_environment {
   type        = string
   default     = "dev"
   description = "Tag to identify the eks environment"
