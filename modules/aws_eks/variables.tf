@@ -131,3 +131,19 @@ variable eks_tags_environment {
   default     = "dev"
   description = "Tag to identify the eks environment"
 }
+
+#variable "eks_cluster_addons" {
+#  type = set(object({
+#      addon_name = string
+#      addon_version = string
+#      resolve_conflicts_on_update = string
+#  }))
+#  default = [
+#    {
+#      userarn  = "arn:aws:iam::66666666666:user/user1"
+#      username = "user1"
+#      groups   = ["system:masters"]
+#    }
+#  ]
+#  description = "Enable a specific user to access the EKS cluster and sets its permissions"
+#}

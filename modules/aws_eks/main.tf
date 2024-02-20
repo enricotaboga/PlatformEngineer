@@ -1,3 +1,27 @@
+# Use a null_resource as an indirect synchronization point
+resource "null_resource" "cluster_sync" {
+  triggers = {
+    cluster_endpoint = module.eks.cluster_endpoint
+  }
+}
+
+data "aws_eks_cluster" "cluster" {
+  name = module.eks.cluster_name
+
+  # Indirectly enforce dependency without causing a cycle
+  depends_on = [null_resource.cluster_sync]
+}
+
+data "aws_eks_cluster_auth" "cluster" {
+  name = module.eks.cluster_name
+  depends_on = [null_resource.cluster_sync]
+}
+
+provider "kubernetes" {
+  host                   = data.aws_eks_cluster.cluster.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.cluster.token
+}
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 19.0"
@@ -9,13 +33,16 @@ module "eks" {
 
   cluster_addons = {
     coredns = {
-      most_recent = true
+      resolve_conflicts_on_update = "OVERWRITE"
+      resolve_conflicts_on_create = "OVERWRITE"
     }
     kube-proxy = {
-      most_recent = true
+      resolve_conflicts_on_update = "OVERWRITE"
+      resolve_conflicts_on_create = "OVERWRITE"
     }
     vpc-cni = {
-      most_recent = true
+      resolve_conflicts_on_update = "OVERWRITE"
+      resolve_conflicts_on_create = "OVERWRITE"
     }
   }
 
@@ -59,18 +86,4 @@ module "eks" {
     Environment = var.eks_tags_environment
     Terraform   = "true"
   }
-}
-
-data "aws_eks_cluster" "cluster" {
-  name = module.eks.cluster_name
-}
-
-data "aws_eks_cluster_auth" "cluster" {
-  name = module.eks.cluster_name
-}
-
-provider "kubernetes" {
-  host                   = data.aws_eks_cluster.cluster.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
-  token                  = data.aws_eks_cluster_auth.cluster.token
 }

@@ -24,7 +24,7 @@ module "aws_vpc" {
 
   vpc_name = var.vpc_name
 
-  vpc_azs             = ["${var.aws_region}a", "${var.aws_region}b", "${var.aws_region}c"]
+  vpc_azs             = var.vpc_azs
   vpc_private_subnets = var.vpc_private_subnets
   vpc_public_subnets  = var.vpc_public_subnets
 
