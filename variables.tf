@@ -82,7 +82,7 @@ variable "eks_vpc_control_plane_subnet_ids" {
   description = "List of subnet ids that will be used to build the eks control plane"
 }
 
-variable eks_ng_name {
+variable "eks_ng_name" {
   type        = list(string)
   default     = ["my-eks-ng"]
   description = "Name for the EKS node group"
@@ -106,7 +106,7 @@ variable "eks_ng_desired_size" {
   description = "Desired number of nodes in the cluster node group"
 }
 
-variable eks_ng_instance_types {
+variable "eks_ng_instance_types" {
   type        = list(string)
   default     = ["t4g.small"]
   description = "Instace type for the EKS node group"
@@ -137,9 +137,9 @@ variable "eks_manage_aws_auth_configmap" {
 
 variable "eks_aws_auth_roles" {
   type = set(object({
-      rolearn = string
-      username = string
-      groups = list(string)
+    rolearn  = string
+    username = string
+    groups   = list(string)
   }))
   default = [
     {
@@ -153,9 +153,9 @@ variable "eks_aws_auth_roles" {
 
 variable "eks_aws_auth_users" {
   type = set(object({
-      userarn = string
-      username = string
-      groups = list(string)
+    userarn  = string
+    username = string
+    groups   = list(string)
   }))
   default = [
     {
@@ -173,7 +173,7 @@ variable "eks_aws_auth_accounts" {
   description = "Enable a specific accounts to access the EKS cluster and sets its permissions"
 }
 
-variable environment {
+variable "environment" {
   type        = string
   default     = "dev"
   description = "Tag to identify the environment"
