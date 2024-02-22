@@ -27,30 +27,7 @@ module "efs" {
   security_group_rules = var.efs_security_group_rules
 
   # Access point(s)
-  access_points = {
-    posix_example = {
-      name = "posix-example"
-      posix_user = {
-        gid            = 1001
-        uid            = 1001
-        secondary_gids = [1002]
-      }
-
-      tags = {
-        Additionl = "yes"
-      }
-    }
-    root_example = {
-      root_directory = {
-        path = "/example"
-        creation_info = {
-          owner_gid   = 1001
-          owner_uid   = 1001
-          permissions = "755"
-        }
-      }
-    }
-  }
+  access_points = var.efs_access_points
 
   # Backup policy
   enable_backup_policy = var.efs_enable_backup_policy
@@ -60,7 +37,7 @@ module "efs" {
   replication_configuration_destination = var.efs_replication_configuration_destination
 
   tags = {
-    Environment = var.eks_tags_environment
+    Environment = var.efs_tags_environment
     Terraform   = "true"
   }
 }

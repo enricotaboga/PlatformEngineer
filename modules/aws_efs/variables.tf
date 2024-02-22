@@ -136,8 +136,29 @@ variable "efs_replication_configuration_destination" {
   }
 }
 
-variable "eks_tags_environment" {
-  description = "The environment tag for EKS-related resources"
+variable "efs_tags_environment" {
+  description = "The environment tag for EFS-related resources"
   type        = string
   default     = "dev"
+}
+
+variable "efs_access_points" {
+  description = "A map of objects representing EFS access points"
+  type = map(object({
+    name = string
+    posix_user = object({
+      gid            = number
+      uid            = number
+      secondary_gids = list(number)
+    })
+    tags = map(string)
+    root_directory = object({
+      path = string
+      creation_info = object({
+        owner_gid   = number
+        owner_uid   = number
+        permissions = string
+      })
+    })
+  }))
 }
