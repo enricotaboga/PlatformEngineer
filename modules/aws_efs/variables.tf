@@ -76,24 +76,6 @@ variable "efs_policy_statements" {
   ]
 }
 
-variable "efs_mount_targets" {
-  description = "Configuration for EFS mount targets"
-  type        = map(object({
-    subnet_id = string
-  }))
-  default = {
-    "eu-west-1a" = {
-      subnet_id = "subnet-abcde012"
-    },
-    "eu-west-1b" = {
-      subnet_id = "subnet-bcde012a"
-    },
-    "eu-west-1c" = {
-      subnet_id = "subnet-fghi345a"
-    }
-  }
-}
-
 variable "efs_security_group_vpc_id" {
   description = "VPC ID for the security group"
   type        = string
@@ -140,25 +122,4 @@ variable "efs_tags_environment" {
   description = "The environment tag for EFS-related resources"
   type        = string
   default     = "dev"
-}
-
-variable "efs_access_points" {
-  description = "A map of objects representing EFS access points"
-  type = map(object({
-    name = string
-    posix_user = object({
-      gid            = number
-      uid            = number
-      secondary_gids = list(number)
-    })
-    tags = map(string)
-    root_directory = object({
-      path = string
-      creation_info = object({
-        owner_gid   = number
-        owner_uid   = number
-        permissions = string
-      })
-    })
-  }))
 }

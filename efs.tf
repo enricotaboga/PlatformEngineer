@@ -5,7 +5,7 @@ module "aws_efs" {
   efs_name             = var.efs_name
   efs_token            = var.efs_token
   efs_enable_encrypted = var.efs_enable_encrypted
-  efs_kms_key_arn      = var.kms_arn
+  efs_kms_key_arn      = module.aws_kms.kms_arn
 
   efs_performance_mode                = var.efs_performance_mode
   efs_throughput_mode                 = var.efs_throughput_mode
@@ -16,13 +16,14 @@ module "aws_efs" {
   efs_bypass_policy_lockout_safety_check = var.efs_bypass_policy_lockout_safety_check
   efs_policy_statements                  = var.efs_policy_statements
 
-  # Mount targets / security group
-  efs_mount_targets         = var.efs_mount_targets
-  efs_security_group_vpc_id = var.efs_security_group_vpc_id
-  efs_security_group_rules  = var.efs_security_group_rules
-
-  # Access point(s)
-  efs_access_points = var.efs_access_points
+  # security group
+  efs_security_group_vpc_id = module.aws_vpc.vpc_id
+  efs_security_group_rules  = {
+    vpc = {
+      description = "EFS ingress from VPC private subnets"
+      cidr_blocks = module.aws_vpc.cidr_private_subnets
+    }
+  }
 
   # Backup policy
   efs_enable_backup_policy = var.efs_enable_backup_policy

@@ -1,4 +1,4 @@
-module "kms" {
+module "aws_kms" {
   source = "./modules/aws_kms"
 
   kms_description = var.kms_description
