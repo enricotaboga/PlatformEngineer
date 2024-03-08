@@ -25,13 +25,7 @@ module "aws_eks" {
 
 
   # aws-auth configmap
-  eks_manage_aws_auth_configmap = var.eks_manage_aws_auth_configmap
-
-  eks_aws_auth_roles = var.eks_aws_auth_roles
-
-  eks_aws_auth_users = var.eks_aws_auth_users
-
-  eks_aws_auth_accounts = var.eks_aws_auth_accounts
+  eks_access_entries = var.eks_access_entries
 
   eks_tags_environment = var.environment
 }

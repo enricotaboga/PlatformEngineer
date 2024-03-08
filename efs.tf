@@ -18,7 +18,7 @@ module "aws_efs" {
 
   # security group
   efs_security_group_vpc_id = module.aws_vpc.vpc_id
-  efs_security_group_rules  = {
+  efs_security_group_rules = {
     vpc = {
       description = "EFS ingress from VPC private subnets"
       cidr_blocks = module.aws_vpc.cidr_private_subnets

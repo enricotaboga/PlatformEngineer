@@ -19,14 +19,15 @@ resource "helm_release" "ingress_nginx" {
     name  = "controller.service.type"
     value = "ClusterIP"
   }
-depends_on = 
+  depends_on = [module.aws_eks]
 }
 
 #resource "helm_release" "harbor" {
-#  name      = "harbor"
-#  chart     = "https://helm.goharbor.io"
-#  namespace = "harbor"
-#  version   = "2.10.0"
+#  name       = "harbor"
+#  chart      = "harbor"
+#  repository = "https://helm.goharbor.io"
+#  namespace  = "harbor"
+#  version    = "2.10.0"
 #}
 #
 resource "helm_release" "aws_efs_csi_driver" {

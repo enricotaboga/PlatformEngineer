@@ -237,9 +237,9 @@ variable "efs_bypass_policy_lockout_safety_check" {
 
 variable "efs_policy_statements" {
   description = "The policy statements for the EFS file system"
-  type        = list(object({
-    sid        = string
-    actions    = list(string)
+  type = list(object({
+    sid     = string
+    actions = list(string)
     principals = list(object({
       type        = string
       identifiers = list(string)
@@ -279,7 +279,7 @@ variable "efs_create_replication_configuration" {
 
 variable "efs_replication_configuration_destination" {
   description = "Replication configuration destination"
-  type        = object({
+  type = object({
     region = string
   })
   default = {
@@ -307,18 +307,6 @@ variable "kms_key_usage" {
   default     = "ENCRYPT_DECRYPT"
 }
 
-variable "kms_key_administrators" {
-  description = "List of IAM role ARNs who have administrative privileges to the KMS key"
-  type        = list(string)
-  default     = []
-}
-
-variable "kms_key_service_roles_for_autoscaling" {
-  description = "List of IAM role ARNs representing AWS service roles that use the KMS key for autoscaling"
-  type        = list(string)
-  default     = []
-}
-
 variable "kms_aliases" {
   description = "List of aliases to assign to the KMS key"
   type        = list(string)
@@ -331,8 +319,44 @@ variable "kms_tags_environment" {
   default     = "dev"
 }
 
-variable kms_enable_default_policy {
+variable "kms_enable_default_policy" {
   type        = bool
   default     = true
   description = "Specifies whether to enable the default key policy. "
+}
+
+variable "eks_context" {
+  type        = string
+  default     = ""
+  description = "Context of the eks cluster"
+}
+
+variable "eks_access_entries" {
+  description = "Access entries with dynamic policy associations and conditional access scopes."
+  type = map(object({
+    kubernetes_groups    = list(string)
+    principal_arn        = string
+    policy_associations  = map(object({
+      policy_arn    = string
+      access_scope  = object({
+        namespaces = optional(list(string))
+        type       = string
+      })
+    }))
+  }))
+  default = {
+    admin = {
+      kubernetes_groups = []
+      principal_arn     = "arn:aws:iam:::user/"
+      policy_associations = {
+        single = { # "single" aqui é um exemplo; pode ser qualquer chave.
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy"
+          access_scope = {
+            namespaces = ["*"] # Opcional, dependendo do valor de "type".
+            type       = "namespace"
+          }
+        }
+      }
+    }
+  }
 }

@@ -132,18 +132,32 @@ variable eks_tags_environment {
   description = "Tag to identify the eks environment"
 }
 
-#variable "eks_cluster_addons" {
-#  type = set(object({
-#      addon_name = string
-#      addon_version = string
-#      resolve_conflicts_on_update = string
-#  }))
-#  default = [
-#    {
-#      userarn  = "arn:aws:iam::66666666666:user/user1"
-#      username = "user1"
-#      groups   = ["system:masters"]
-#    }
-#  ]
-#  description = "Enable a specific user to access the EKS cluster and sets its permissions"
-#}
+variable "eks_access_entries" {
+  description = "Access entries with dynamic policy associations and conditional access scopes."
+  type = map(object({
+    kubernetes_groups    = list(string)
+    principal_arn        = string
+    policy_associations  = map(object({
+      policy_arn    = string
+      access_scope  = object({
+        namespaces = optional(list(string))
+        type       = string
+      })
+    }))
+  }))
+  default = {
+    admin = {
+      kubernetes_groups = []
+      principal_arn     = "arn:aws:iam:::user/"
+      policy_associations = {
+        single = { # "single" aqui é um exemplo; pode ser qualquer chave.
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy"
+          access_scope = {
+            namespaces = ["*"] # Opcional, dependendo do valor de "type".
+            type       = "namespace"
+          }
+        }
+      }
+    }
+  }
+}

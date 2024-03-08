@@ -1,6 +1,6 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.0"
+  version = "20.5.0"
 
   cluster_name    = var.eks_cluster_name
   cluster_version = var.eks_cluster_version
@@ -49,42 +49,10 @@ module "eks" {
     }
   }
 
-  # aws-auth configmap
-  manage_aws_auth_configmap = var.eks_manage_aws_auth_configmap
-
-  aws_auth_roles = var.eks_aws_auth_roles
-
-  aws_auth_users = var.eks_aws_auth_users
-
-  aws_auth_accounts = var.eks_aws_auth_accounts
+  access_entries = var.eks_access_entries
 
   tags = {
     Environment = var.eks_tags_environment
     Terraform   = "true"
   }
-}
-
-# Use a null_resource as an indirect synchronization point
-resource "null_resource" "cluster_sync" {
-  triggers = {
-    cluster_endpoint = module.eks.cluster_endpoint
-  }
-}
-
-data "aws_eks_cluster" "cluster" {
-  name = module.eks.cluster_name
-
-  # Indirectly enforce dependency without causing a cycle
-  depends_on = [null_resource.cluster_sync]
-}
-
-data "aws_eks_cluster_auth" "cluster" {
-  name = module.eks.cluster_name
-  depends_on = [null_resource.cluster_sync]
-}
-
-provider "kubernetes" {
-  host                   = data.aws_eks_cluster.cluster.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.cluster.certificate_authority[0].data)
-  token                  = data.aws_eks_cluster_auth.cluster.token
 }

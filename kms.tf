@@ -9,6 +9,6 @@ module "aws_kms" {
 
   # Aliases
   kms_aliases = var.kms_aliases
-  
+
   kms_tags_environment = var.kms_tags_environment
 }
