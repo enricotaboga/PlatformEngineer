@@ -22,6 +22,7 @@ provider "aws" {
 provider "helm" {
   kubernetes {
     config_path = "~/.kube/config"
+    config_context = var.eks_context
   }
 }
 
@@ -29,4 +30,5 @@ provider "kubernetes" {
   # Configurações do provedor, se necessário
   # Por exemplo, você pode especificar o caminho do arquivo kubeconfig:
   config_path = "~/.kube/config"
+  config_context = var.eks_context
 }

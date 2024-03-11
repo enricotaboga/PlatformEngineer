@@ -1,3 +1,11 @@
+resource "null_resource" "update_kubeconfig" {
+  depends_on = [module.aws_eks]
+
+  provisioner "local-exec" {
+    command = "aws eks --region ${var.aws_region} update-kubeconfig --name ${var.eks_cluster_name} --alias ${var.eks_context}"
+  }
+}
+
 resource "kubernetes_namespace" "ingress_nginx" {
   metadata {
     name = "ingress-nginx"
@@ -8,7 +16,8 @@ resource "helm_release" "ingress_nginx" {
   name       = "ingress-nginx"
   repository = "https://kubernetes.github.io/ingress-nginx"
   chart      = "ingress-nginx"
-  namespace  = "ingress-nginx" # Certifique-se de que este namespace já existe ou é criado em outro lugar no seu Terraform
+  namespace  = "ingress-nginx" 
+  create_namespace = true
 
   set {
     name  = "controller.replicaCount"
@@ -19,7 +28,7 @@ resource "helm_release" "ingress_nginx" {
     name  = "controller.service.type"
     value = "ClusterIP"
   }
-  depends_on = [module.aws_eks]
+  depends_on = [module.aws_eks, kubernetes_namespace.ingress_nginx]
 }
 
 #resource "helm_release" "harbor" {
