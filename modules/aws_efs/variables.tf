@@ -25,7 +25,7 @@ variable "efs_kms_key_arn" {
 variable "efs_performance_mode" {
   description = "The performance mode of the file system"
   type        = string
-  default     = "maxIO"
+  default     = "generalPurpose"
 }
 
 variable "efs_throughput_mode" {

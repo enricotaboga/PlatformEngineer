@@ -208,7 +208,7 @@ variable "efs_kms_key_arn" {
 variable "efs_performance_mode" {
   description = "The performance mode of the file system"
   type        = string
-  default     = "maxIO"
+  default     = "generalPurpose"
 }
 
 variable "efs_throughput_mode" {
@@ -220,7 +220,7 @@ variable "efs_throughput_mode" {
 variable "efs_provisioned_throughput_in_mibps" {
   description = "Provisioned throughput in MiB/s when throughput mode is set to provisioned"
   type        = number
-  default     = 256
+  default     = 1
 }
 
 variable "efs_enable_attach_policy" {
@@ -334,11 +334,11 @@ variable "eks_context" {
 variable "eks_access_entries" {
   description = "Access entries with dynamic policy associations and conditional access scopes."
   type = map(object({
-    kubernetes_groups    = list(string)
-    principal_arn        = string
-    policy_associations  = map(object({
-      policy_arn    = string
-      access_scope  = object({
+    kubernetes_groups = list(string)
+    principal_arn     = string
+    policy_associations = map(object({
+      policy_arn = string
+      access_scope = object({
         namespaces = optional(list(string))
         type       = string
       })
@@ -359,4 +359,10 @@ variable "eks_access_entries" {
       }
     }
   }
+}
+
+variable aws_account {
+  type        = string
+  default     = ""
+  description = "Id of aws account"
 }
