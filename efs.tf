@@ -16,6 +16,7 @@ module "aws_efs" {
   efs_bypass_policy_lockout_safety_check = var.efs_bypass_policy_lockout_safety_check
   efs_policy_statements                  = var.efs_policy_statements
 
+  efs_mount_targets = { for k, v in zipmap(var.vpc_azs, module.aws_vpc.private_subnets) : k => { subnet_id = v } }
   # security group
   efs_security_group_vpc_id = module.aws_vpc.vpc_id
   efs_security_group_rules = {
@@ -35,3 +36,4 @@ module "aws_efs" {
 
   efs_tags_environment = var.efs_tags_environment
 }
+

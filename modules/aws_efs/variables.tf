@@ -123,3 +123,9 @@ variable "efs_tags_environment" {
   type        = string
   default     = "dev"
 }
+
+variable efs_mount_targets {
+  type        = any
+  default     = {}
+  description = "List of mount targets to be created in the EFS"
+}

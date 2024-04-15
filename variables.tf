@@ -293,6 +293,13 @@ variable "efs_tags_environment" {
   default     = "dev"
 }
 
+variable "efs_mount_targets" {
+  type        = any
+  default     = {}
+  description = "List of mount targets to be created in the EFS"
+}
+
+
 #KMS variables
 
 variable "kms_description" {
@@ -361,7 +368,7 @@ variable "eks_access_entries" {
   }
 }
 
-variable aws_account {
+variable "aws_account" {
   type        = string
   default     = ""
   description = "Id of aws account"

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: efs-root-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  volumeMode: Filesystem
+  storageClassName: "efs-sc"
+  resources:
+    requests:
+      storage: 5Gi
+  volumeName: efs-root-pv  # Assegura que este PVC se vincule ao PV criado anteriormente.
+
+

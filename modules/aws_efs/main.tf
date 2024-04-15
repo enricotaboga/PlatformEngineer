@@ -20,6 +20,9 @@ module "efs" {
   bypass_policy_lockout_safety_check = var.efs_bypass_policy_lockout_safety_check
   policy_statements = var.efs_policy_statements
 
+
+  # Mount targets / security group
+  mount_targets              = var.efs_mount_targets
   #security group
   security_group_description = "EFS security group"
   security_group_vpc_id      = var.efs_security_group_vpc_id

@@ -207,10 +207,10 @@ persistence:
     # be ignored
     database:
       existingClaim: ""
-      storageClass: "efs-sc"
+      storageClass: ""
       subPath: ""
       accessMode: ReadWriteOnce
-      size: 1Gi
+      size: 5Gi
       annotations: {}
     # If external Redis is used, the following settings for Redis will
     # be ignored
@@ -387,7 +387,7 @@ nginx:
     repository: goharbor/nginx-photon
     tag: v2.10.0
   # set the service account to be used, default if left empty
-  serviceAccountName: "efs-csi-controller-sa"
+  serviceAccountName: "harbor-sa"
   # mount the service account token
   automountServiceAccountToken: false
   replicas: 1
@@ -418,7 +418,7 @@ portal:
     repository: goharbor/harbor-portal
     tag: v2.10.0
   # set the service account to be used, default if left empty
-  serviceaccountName: "efs-csi-controller-sa"
+  serviceAccountName: "harbor-sa"
   # mount the service account token
   automountServiceAccountToken: false
   replicas: 1
@@ -451,7 +451,7 @@ core:
     repository: goharbor/harbor-core
     tag: v2.10.0
   # set the service account to be used, default if left empty
-  serviceaccountName: "efs-csi-controller-sa"
+  serviceAccountName: "harbor-sa"
   # mount the service account token
   automountServiceAccountToken: false
   replicas: 1
@@ -532,7 +532,7 @@ jobservice:
   replicas: 1
   revisionHistoryLimit: 10
   # set the service account to be used, default if left empty
-  serviceaccountName: "efs-csi-controller-sa"
+  serviceAccountName: "harbor-sa"
   # mount the service account token
   automountServiceAccountToken: false
   maxJobWorkers: 10
@@ -583,7 +583,7 @@ jobservice:
 
 registry:
   # set the service account to be used, default if left empty
-  serviceaccountName: "efs-csi-controller-sa"
+  serviceAccountName: "harbor-sa"
   # mount the service account token
   automountServiceAccountToken: false
   registry:
@@ -671,7 +671,7 @@ trivy:
     # tag the tag for Trivy adapter image
     tag: v2.10.0
   # set the service account to be used, default if left empty
-  serviceaccountName: "efs-csi-controller-sa"
+  serviceAccountName: "harbor-sa"
   # mount the service account token
   automountServiceAccountToken: false
   # replicas the number of Pod replicas
@@ -747,10 +747,10 @@ trivy:
 database:
   # if external database is used, set "type" to "external"
   # and fill the connection information in "external" section
-  type: internal
+  type: external
   internal:
     # set the service account to be used, default if left empty
-    serviceaccountName: "efs-csi-controller-sa"
+    serviceAccountName: "harbor-sa"
     # mount the service account token
     automountServiceAccountToken: false
     image:
@@ -776,25 +776,12 @@ database:
     nodeSelector: {}
     tolerations: []
     affinity: {}
-    ## The priority class to run the pod as
-    priorityClassName:
-    initContainer:
-      migrator: {}
-      # resources:
-      #  requests:
-      #    memory: 128Mi
-      #    cpu: 100m
-      permissions: {}
-      # resources:
-      #  requests:
-      #    memory: 128Mi
-      #    cpu: 100m
   external:
-    host: "192.168.0.1"
+    host: "postgres"
     port: "5432"
-    username: "user"
-    password: "password"
-    coreDatabase: "registry"
+    username: "exampleuser"
+    password: "examplepass"
+    coreDatabase: "exampledb"
     # if using existing secret, the key must be "password"
     existingSecret: ""
     # "disable" - No SSL
@@ -823,7 +810,7 @@ redis:
   type: internal
   internal:
     # set the service account to be used, default if left empty
-    serviceaccountName: "efs-csi-controller-sa"
+    serviceAccountName: "harbor-sa"
     # mount the service account token
     automountServiceAccountToken: false
     image:
@@ -887,7 +874,7 @@ exporter:
   podAnnotations: {}
   ## Additional deployment labels
   podLabels: {}
-  serviceaccountName: "efs-csi-controller-sa"
+  serviceAccountName: "harbor-sa"
   # mount the service account token
   automountServiceAccountToken: false
   image:

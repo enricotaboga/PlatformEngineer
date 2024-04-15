@@ -29,16 +29,66 @@ resource "helm_release" "ingress_nginx" {
 
 #harbor
 
+resource "kubernetes_namespace" "harbor-ns" {
+  depends_on = [module.aws_eks]
+  metadata {
+    name = "harbor"
+  }
+}
+
+resource "null_resource" "deploy-postgres" {
+  depends_on = [kubernetes_namespace.harbor-ns]
+
+  provisioner "local-exec" {
+    command = "kubectl apply -f values/postgres.yaml --context ${var.eks_context} -n harbor"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "harbor_role_attach" {
+  role       = aws_iam_role.harbor_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
+}
+
+resource "aws_iam_role" "harbor_role" {
+  name = "harbor_role"
+
+  assume_role_policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [{
+      "Effect" : "Allow",
+      "Principal" : {
+        "Federated" : "arn:aws:iam::${var.aws_account}:oidc-provider/${module.aws_eks.eks_oidc_provider}"
+      },
+      "Action" : "sts:AssumeRoleWithWebIdentity",
+      "Condition" : {
+        "StringEquals" : {
+          "${module.aws_eks.eks_oidc_provider}:aud" : "sts.amazonaws.com"
+          "${module.aws_eks.eks_oidc_provider}:sub" : "system:serviceaccount:harbor:harbor-sa"
+        }
+      }
+    }]
+  })
+}
+
+resource "kubernetes_service_account" "harbor-sa" {
+  depends_on    = [kubernetes_namespace.harbor-ns]
+  metadata {
+    name        = "harbor-sa"
+    namespace   = "harbor"
+    annotations = {
+      "eks.amazonaws.com/role-arn" = "arn:aws:iam::705577181377:role/${aws_iam_role.harbor_role.name}"
+    }
+  }
+}
+
 resource "helm_release" "harbor" {
-  depends_on       = [module.aws_eks, helm_release.aws_efs_csi_driver]
+  depends_on       = [kubernetes_namespace.harbor-ns]
   name             = "harbor"
   chart            = "harbor"
   repository       = "harbor-release"
   namespace        = "harbor"
-  version          = "1.14.0"
-  create_namespace = true
+  version          = "1.14.2"
   values           = ["${file("values/harbor.yaml")}"]
-  timeout          = "60"
 }
 
 #efs driver
@@ -57,7 +107,7 @@ resource "helm_release" "aws_efs_csi_driver" {
   }
   set {
     name  = "storageClasses[0].parameters.fileSystemId"
-    value = "${module.aws_efs.efs_id}"
+    value = module.aws_efs.efs_id
   }
 }
 

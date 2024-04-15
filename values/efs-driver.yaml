@@ -186,7 +186,8 @@ storageClasses:
   - tls
   parameters:
     provisioningMode: efs-ap
-    directoryPerms: "777"
+    basePath: "/data"
+    directoryPerms: "775"
 #     ensureUniqueDirectory: true
 #   reclaimPolicy: Delete
 #   volumeBindingMode: Immediate
