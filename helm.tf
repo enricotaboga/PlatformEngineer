@@ -30,7 +30,7 @@ resource "helm_release" "ingress_nginx" {
 #harbor
 
 resource "kubernetes_namespace" "harbor-ns" {
-  depends_on = [module.aws_eks]
+  depends_on = [module.aws_eks, null_resource.update_kubeconfig]
   metadata {
     name = "harbor"
   }
