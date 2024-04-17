@@ -29,3 +29,11 @@ module "aws_eks" {
 
   eks_tags_environment = var.environment
 }
+
+resource "null_resource" "update_kubeconfig" {
+  depends_on = [module.aws_eks]
+
+  provisioner "local-exec" {
+    command = "aws eks --region ${var.aws_region} update-kubeconfig --name ${var.eks_cluster_name} --alias ${var.eks_context} && sleep 10"
+  }
+}
