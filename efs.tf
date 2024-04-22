@@ -1,5 +1,5 @@
 module "aws_efs" {
-  source = "./modules/aws_efs"
+  source     = "./modules/aws_efs"
   depends_on = [aws_iam_role.efs_driver_role, aws_iam_role.harbor_role]
 
   # File system

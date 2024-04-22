@@ -41,28 +41,28 @@ resource "aws_iam_role" "harbor_role" {
 }
 
 resource "kubernetes_service_account" "harbor-sa" {
-  depends_on    = [kubernetes_namespace.harbor-ns]
+  depends_on = [kubernetes_namespace.harbor-ns]
   metadata {
-    name        = "harbor-sa"
-    namespace   = var.harbor_namespace
+    name      = "harbor-sa"
+    namespace = var.harbor_namespace
     annotations = {
-      "eks.amazonaws.com/role-arn" = "arn:aws:iam::705577181377:role/${aws_iam_role.harbor_role.name}"
+      "eks.amazonaws.com/role-arn" = "arn:aws:iam::${var.aws_account}:role/${aws_iam_role.harbor_role.name}"
     }
   }
 }
 
-resource "helm_repository" "harbor-repository" {
-  name = "harbor-release"
-  url  = "https://helm.goharbor.io/"
+resource "null_resource" "helm_add_repo_harbor" {
+  provisioner "local-exec" {
+    command = "helm repo remove harbor-release && helm repo add harbor-release https://helm.goharbor.io"
+  }
 }
 
-
 resource "helm_release" "harbor" {
-  depends_on       = [kubernetes_namespace.harbor-ns, helm_repository.harbor-repository]
-  name             = "harbor"
-  chart            = "harbor"
-  repository       = "harbor-release"
-  namespace        = var.harbor_namespace
-  version          = "1.14.2"
-  values           = ["${file("values/harbor.yaml")}"]
+  depends_on = [kubernetes_namespace.harbor-ns, null_resource.helm_add_repo_harbor]
+  name       = "harbor"
+  chart      = "harbor"
+  repository = "harbor-release"
+  namespace  = var.harbor_namespace
+  version    = "1.14.2"
+  values     = ["${file("values/harbor.yaml")}"]
 }
