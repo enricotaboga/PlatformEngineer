@@ -28,6 +28,25 @@ variable vpc_public_subnets {
   description = "A list contaning the VPC public subnets"
 }
 
+variable vpc_private_subnet_tags {
+  type        = map(string)
+  default     = {
+    "kubernetes.io/role/elb" = "1"
+    "kubernetes.io/cluster/meu-cluster-k8s" = "shared"
+  }
+  description = "private subnet tags"
+}
+
+variable vpc_public_subnet_tags {
+  type        = map(string)
+  default     = {
+    "kubernetes.io/role/elb" = "1"
+    "kubernetes.io/cluster/meu-cluster-k8s" = "shared"
+  }
+  description = "public subnet tags"
+}
+
+
 variable vpc_enable_nat_gateway {
   type        = bool
   default     = "true"

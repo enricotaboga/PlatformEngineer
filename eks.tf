@@ -27,6 +27,17 @@ module "aws_eks" {
   # aws-auth configmap
   eks_access_entries = var.eks_access_entries
 
+  eks_node_security_group_additional_rules = {
+    ingress_nlb_ingress = {
+      description = "NLB SG"
+      protocol    = "tcp"
+      from_port   = 80
+      to_port     = 80
+      type        = "ingress"
+      source_security_group_id  = aws_security_group.ingress_sg.id
+    }
+  }
+
   eks_tags_environment = var.environment
 }
 
@@ -34,6 +45,6 @@ resource "null_resource" "update_kubeconfig" {
   depends_on = [module.aws_eks]
 
   provisioner "local-exec" {
-    command = "aws eks --region ${var.aws_region} update-kubeconfig --name ${var.eks_cluster_name} --alias ${var.eks_context} && sleep 10"
+    command = "aws eks --region ${var.aws_region} update-kubeconfig --name ${var.eks_cluster_name} --alias ${var.eks_context} && sleep 60"
   }
 }

@@ -51,6 +51,8 @@ module "eks" {
 
   access_entries = var.eks_access_entries
 
+  node_security_group_additional_rules = var.eks_node_security_group_additional_rules
+
   tags = {
     Environment = var.eks_tags_environment
     Terraform   = "true"

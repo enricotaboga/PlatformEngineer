@@ -132,6 +132,13 @@ variable eks_tags_environment {
   description = "Tag to identify the eks environment"
 }
 
+variable eks_node_security_group_additional_rules {
+  type        = any
+  default     = {}
+  description = "Additional rules for Node group SG"
+}
+
+
 variable "eks_access_entries" {
   description = "Access entries with dynamic policy associations and conditional access scopes."
   type = map(object({
