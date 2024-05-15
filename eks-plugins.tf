@@ -8,7 +8,7 @@ resource "helm_release" "ingress_nginx" {
 
   set {
     name  = "controller.replicaCount"
-    value = "2"
+    value = "1"
   }
 
   set {
@@ -70,7 +70,6 @@ resource "aws_iam_role" "efs_driver_role" {
 }
 
 #external DNS
-#alb controller driver
 resource "aws_iam_policy" "external_DNS_policy" {
   name        = "AllowExternalDNSUpdates"
   path        = "/"
@@ -114,6 +113,18 @@ resource "aws_iam_role_policy_attachment" "external_DNS_role_attach" {
   role       = aws_iam_role.external_DNS_role.name
   policy_arn = aws_iam_policy.external_DNS_policy.arn
 }
+
+resource "null_resource" "deploy_external_DNS" {
+  depends_on = [module.aws_eks]
+
+  provisioner "local-exec" {
+    command = <<EOT
+kubectl apply -f values/external-dns.yaml --context ${var.eks_context} -n kube-system && kubectl patch deployment external-dns -n kube-system -p '{"spec": {"template": {"spec": {"containers": [{"name": "external-dns", "args": ["--source=service", "--source=ingress", "--provider=aws", "--registry=txt", "--txt-owner-id=${data.aws_route53_zone.selected.zone_id}"]}]}}}}'
+    EOT
+  }
+}
+
+
 
 
 #alb controller driver
@@ -201,8 +212,8 @@ resource "helm_release" "alb-controller" {
 
   # Ingress and egress rules can be specified here as needed
   ingress {
-    from_port   = 80
-    to_port     = 80
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = var.nlb_sg_ipv4_cidr
   }
@@ -220,6 +231,7 @@ resource "helm_release" "alb-controller" {
 }
 
  resource "kubernetes_ingress_v1" "nlb_ingress_https_global" {
+  depends_on = [helm_release.alb-controller, helm_release.ingress_nginx]
   metadata {
     name        = "nlb-ingress-https-global"
     namespace   = "ingress-nginx"
@@ -227,11 +239,14 @@ resource "helm_release" "alb-controller" {
       "alb.ingress.kubernetes.io/scheme"             = "internet-facing"
       "alb.ingress.kubernetes.io/target-type"        = "ip"
       "alb.ingress.kubernetes.io/load-balancer-type" = "nlb"
-      "alb.ingress.kubernetes.io/listen-ports"       = "[{\"HTTP\":80}]"
+      "alb.ingress.kubernetes.io/certificate-arn"    =  "${module.acm.acm_certificate_arn}"
+      "alb.ingress.kubernetes.io/listen-ports"       = "[{\"HTTPS\": 443}]"
       "alb.ingress.kubernetes.io/security-groups"    = aws_security_group.ingress_sg.id
-      "alb.ingress.kubernetes.io/subnets" = join(",", module.aws_vpc.public_subnets)
-      "alb.ingress.kubernetes.io/healthcheck-path" = "/healthz"
-      "alb.ingress.kubernetes.io/healthcheck-port" = "10254"
+      "alb.ingress.kubernetes.io/subnets"           = join(",", module.aws_vpc.public_subnets)
+      "alb.ingress.kubernetes.io/healthcheck-path"  = "/healthz"
+      "alb.ingress.kubernetes.io/healthcheck-port"  = "10254"
+      "external-dns.alpha.kubernetes.io/hostname"   = "*.${var.domain}"
+
 
 
     }
@@ -240,7 +255,7 @@ resource "helm_release" "alb-controller" {
     ingress_class_name = "alb"
 
     rule {
-      host = "*.plat-eng.com.br"
+      host = "*.${var.domain}"
 
       http {
         path {

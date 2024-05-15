@@ -29,12 +29,12 @@ module "aws_eks" {
 
   eks_node_security_group_additional_rules = {
     ingress_nlb_ingress = {
-      description = "NLB SG"
-      protocol    = "tcp"
-      from_port   = 80
-      to_port     = 80
-      type        = "ingress"
-      source_security_group_id  = aws_security_group.ingress_sg.id
+      description              = "NLB SG"
+      protocol                 = "tcp"
+      from_port                = 80
+      to_port                  = 80
+      type                     = "ingress"
+      source_security_group_id = aws_security_group.ingress_sg.id
     }
   }
 

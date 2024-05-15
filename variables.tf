@@ -34,19 +34,19 @@ variable "vpc_public_subnets" {
   description = "A list contaning the VPC public subnets"
 }
 
-variable vpc_private_subnet_tags {
-  type        = map(string)
-  default     = {
-    "kubernetes.io/role/elb" = "1"
+variable "vpc_private_subnet_tags" {
+  type = map(string)
+  default = {
+    "kubernetes.io/role/elb"       = "1"
     "kubernetes.io/cluster/my-eks" = "shared"
   }
   description = "private subnet tags"
 }
 
-variable vpc_public_subnet_tags {
-  type        = map(string)
-  default     = {
-    "kubernetes.io/role/elb" = "1"
+variable "vpc_public_subnet_tags" {
+  type = map(string)
+  default = {
+    "kubernetes.io/role/elb"                = "1"
     "kubernetes.io/cluster/meu-cluster-k8s" = "shared"
   }
   description = "public subnet tags"
@@ -192,7 +192,7 @@ variable "eks_aws_auth_accounts" {
   description = "Enable a specific accounts to access the EKS cluster and sets its permissions"
 }
 
-variable eks_node_security_group_additional_rules {
+variable "eks_node_security_group_additional_rules" {
   type        = any
   default     = {}
   description = "Additional rules for Node group SG"
@@ -405,8 +405,16 @@ variable "harbor_namespace" {
   description = "Harbor namespace name"
 }
 
-variable nlb_sg_ipv4_cidr {
+variable "nlb_sg_ipv4_cidr" {
   type        = list(string)
   default     = ["0.0.0.0/0"]
   description = "CIDR block to NLB SG ingress rule"
 }
+
+variable "domain" {
+  type        = string
+  default     = "my.domain.com"
+  description = "Domain name"
+}
+
+
