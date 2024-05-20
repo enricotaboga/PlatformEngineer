@@ -1,31 +1,34 @@
 #ingress-controller
-resource "helm_release" "ingress_nginx" {
+module "ingress_nginx" {
+  source           = "./modules/helm"
   name             = "ingress-nginx"
   repository       = "https://kubernetes.github.io/ingress-nginx"
   chart            = "ingress-nginx"
   namespace        = "ingress-nginx"
   create_namespace = true
 
-  set {
-    name  = "controller.replicaCount"
-    value = "1"
-  }
-
-  set {
-    name  = "controller.service.type"
-    value = "ClusterIP"
-  }
-
-  set {
-    name  = "controller.service.internal.nodePorts.http"
-    value = "30080"
-  }
+  set_values = [
+    {
+      name  = "controller.replicaCount"
+      value = "1"
+    },
+    {
+      name  = "controller.service.type"
+      value = "ClusterIP"
+    },
+    {
+      name  = "controller.service.internal.nodePorts.http"
+      value = "30080"
+    },
+  ]
 
   depends_on = [module.aws_eks]
 }
 
+
 #efs csi driver
-resource "helm_release" "aws_efs_csi_driver" {
+module "aws_efs_csi_driver" {
+  source           = "./modules/helm"
   depends_on = [module.aws_eks, aws_iam_role.efs_driver_role]
   repository = "https://kubernetes-sigs.github.io/aws-efs-csi-driver/"
   name       = "aws-efs-csi-driver"
@@ -33,14 +36,16 @@ resource "helm_release" "aws_efs_csi_driver" {
   namespace  = "kube-system"
   values     = ["${file("values/efs-driver.yaml")}"]
 
-  set {
-    name  = "controller.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-    value = "arn:aws:iam::${var.aws_account}:role/efs_driver_role"
-  }
-  set {
+  set_values = [
+    {
+      name  = "controller.serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+      value = "arn:aws:iam::${var.aws_account}:role/efs_driver_role"
+    },
+    {
     name  = "storageClasses[0].parameters.fileSystemId"
     value = module.aws_efs.efs_id
-  }
+    }
+  ]
 }
 
 resource "aws_iam_role_policy_attachment" "efs_driver_role_attach" {
@@ -239,7 +244,7 @@ resource "helm_release" "alb-controller" {
       "alb.ingress.kubernetes.io/scheme"             = "internet-facing"
       "alb.ingress.kubernetes.io/target-type"        = "ip"
       "alb.ingress.kubernetes.io/load-balancer-type" = "nlb"
-      "alb.ingress.kubernetes.io/certificate-arn"    =  "${module.acm.acm_certificate_arn}"
+      "alb.ingress.kubernetes.io/certificate-arn"    =  "${module.aws_acm.acm_arn}"
       "alb.ingress.kubernetes.io/listen-ports"       = "[{\"HTTPS\": 443}]"
       "alb.ingress.kubernetes.io/security-groups"    = aws_security_group.ingress_sg.id
       "alb.ingress.kubernetes.io/subnets"           = join(",", module.aws_vpc.public_subnets)

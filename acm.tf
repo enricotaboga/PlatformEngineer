@@ -1,19 +1,8 @@
-module "acm" {
-  source  = "terraform-aws-modules/acm/aws"
-  version = "~> 4.0"
-
-  domain_name  = var.domain
-  zone_id      = data.aws_route53_zone.selected.zone_id
-
-  validation_method = "DNS"
-
-  subject_alternative_names = ["*.${var.domain}"]
-
-  wait_for_validation = true
-
-  tags = {
-    Name = var.domain
-  }
+module "aws_acm" {
+  source     = "./modules/aws_acm"
+  acm_domain_name = var.domain
+  acm_zone_id = data.aws_route53_zone.selected.zone_id
+  acm_tags_environment = var.environment
 }
 
 data "aws_route53_zone" "selected" {
