@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: "nginx"
   rules:
-  - host: generic.plat-eng.com.br
+  - host: harbor.plat-eng.com.br
     http:
       paths:
       - path: /

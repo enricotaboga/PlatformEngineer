@@ -177,37 +177,35 @@ resource "kubernetes_service_account" "alb_controller_sa" {
   }
 }
 
-resource "helm_release" "alb-controller" {
+module "alb_controller" {
+ source     = "./modules/helm"
  name       = "aws-load-balancer-controller"
  repository = "https://aws.github.io/eks-charts"
  chart      = "aws-load-balancer-controller"
  namespace  = "kube-system"
  depends_on = [kubernetes_service_account.alb_controller_sa]
-
- set {
+ set_values = [
+ {
      name  = "region"
      value = var.aws_region
- }
-
- set {
+ },
+ {
      name  = "vpcId"
      value = module.aws_vpc.vpc_id
- }
-
- set {
+ },
+ {
      name  = "serviceAccount.create"
      value = "false"
- }
-
- set {
+ },
+ {
      name  = "serviceAccount.name"
      value = "alb-controller-sa"
- }
-
- set {
+ },
+ {
      name  = "clusterName"
      value = var.eks_cluster_name
  }
+ ]
  }
 
  resource "aws_security_group" "ingress_sg" {
@@ -236,7 +234,7 @@ resource "helm_release" "alb-controller" {
 }
 
  resource "kubernetes_ingress_v1" "nlb_ingress_https_global" {
-  depends_on = [helm_release.alb-controller, helm_release.ingress_nginx]
+  depends_on = [module.alb_controller, module.ingress_nginx]
   metadata {
     name        = "nlb-ingress-https-global"
     namespace   = "ingress-nginx"

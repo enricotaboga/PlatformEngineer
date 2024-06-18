@@ -1,13 +1,13 @@
 #harbor
-resource "kubernetes_namespace" "harbor-ns" {
+resource "kubernetes_namespace" "harbor_ns" {
   depends_on = [module.aws_eks, null_resource.update_kubeconfig]
   metadata {
     name = var.harbor_namespace
   }
 }
 
-resource "null_resource" "deploy-postgres" {
-  depends_on = [kubernetes_namespace.harbor-ns]
+resource "null_resource" "deploy_postgres" {
+  depends_on = [kubernetes_namespace.harbor_ns]
 
   provisioner "local-exec" {
     command = "kubectl apply -f values/postgres.yaml --context ${var.eks_context} -n ${var.harbor_namespace}"
@@ -40,8 +40,8 @@ resource "aws_iam_role" "harbor_role" {
   })
 }
 
-resource "kubernetes_service_account" "harbor-sa" {
-  depends_on = [kubernetes_namespace.harbor-ns]
+resource "kubernetes_service_account" "harbor_sa" {
+  depends_on = [kubernetes_namespace.harbor_ns]
   metadata {
     name      = "harbor-sa"
     namespace = var.harbor_namespace
@@ -57,18 +57,19 @@ resource "null_resource" "helm_add_repo_harbor" {
   }
 }
 
-resource "helm_release" "harbor" {
-  depends_on = [kubernetes_namespace.harbor-ns, null_resource.helm_add_repo_harbor, helm_release.alb-controller]
+module "harbor" {
+  source     = "./modules/helm"
+  depends_on = [kubernetes_namespace.harbor_ns, null_resource.helm_add_repo_harbor, module.alb_controller]
   name       = "harbor"
   chart      = "harbor"
   repository = "harbor-release"
   namespace  = var.harbor_namespace
-  version    = "1.14.2"
+  helm_version  = "1.14.2"
   values     = ["${file("values/harbor.yaml")}"]
 }
 
 resource "null_resource" "ingress_harbor" {
-  depends_on = [kubernetes_namespace.harbor-ns]
+  depends_on = [kubernetes_namespace.harbor_ns]
   provisioner "local-exec" {
     command = "kubectl apply -f values/harbor-ingress.yaml --context ${var.eks_context} -n ${var.harbor_namespace}"
   }
