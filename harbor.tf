@@ -14,30 +14,15 @@ resource "null_resource" "deploy_postgres" {
   }
 }
 
-resource "aws_iam_role_policy_attachment" "harbor_role_attach" {
-  role       = aws_iam_role.harbor_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
-}
-
-resource "aws_iam_role" "harbor_role" {
-  name = "harbor_role"
-
-  assume_role_policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [{
-      "Effect" : "Allow",
-      "Principal" : {
-        "Federated" : "arn:aws:iam::${var.aws_account}:oidc-provider/${module.aws_eks.eks_oidc_provider}"
-      },
-      "Action" : "sts:AssumeRoleWithWebIdentity",
-      "Condition" : {
-        "StringEquals" : {
-          "${module.aws_eks.eks_oidc_provider}:aud" : "sts.amazonaws.com"
-          "${module.aws_eks.eks_oidc_provider}:sub" : "system:serviceaccount:${var.harbor_namespace}:harbor-sa"
-        }
-      }
-    }]
-  })
+module "harbor_iam" {
+  source = "./modules/aws_iam"
+  create_iam_policy = false
+  aws_account = var.aws_account
+  eks_oidc_provider = module.aws_eks.eks_oidc_provider
+  kubernetes_ns = var.harbor_namespace
+  kubernetes_sa = "harbor-sa"
+  iam_role_name = "harbor_role"
+  iam_policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
 }
 
 resource "kubernetes_service_account" "harbor_sa" {
@@ -46,7 +31,7 @@ resource "kubernetes_service_account" "harbor_sa" {
     name      = "harbor-sa"
     namespace = var.harbor_namespace
     annotations = {
-      "eks.amazonaws.com/role-arn" = "arn:aws:iam::${var.aws_account}:role/${aws_iam_role.harbor_role.name}"
+      "eks.amazonaws.com/role-arn" = "arn:aws:iam::${var.aws_account}:role/${module.harbor_iam.iam_role_name}"
     }
   }
 }

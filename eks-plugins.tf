@@ -29,7 +29,7 @@ module "ingress_nginx" {
 #efs csi driver
 module "aws_efs_csi_driver" {
   source           = "./modules/helm"
-  depends_on = [module.aws_eks, aws_iam_role.efs_driver_role]
+  depends_on = [module.aws_eks, module.efs_driver_iam]
   repository = "https://kubernetes-sigs.github.io/aws-efs-csi-driver/"
   name       = "aws-efs-csi-driver"
   chart      = "aws-efs-csi-driver"
@@ -48,38 +48,29 @@ module "aws_efs_csi_driver" {
   ]
 }
 
-resource "aws_iam_role_policy_attachment" "efs_driver_role_attach" {
-  role       = aws_iam_role.efs_driver_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
-}
-
-resource "aws_iam_role" "efs_driver_role" {
-  name = "efs_driver_role"
-
-  assume_role_policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [{
-      "Effect" : "Allow",
-      "Principal" : {
-        "Federated" : "arn:aws:iam::${var.aws_account}:oidc-provider/${module.aws_eks.eks_oidc_provider}"
-      },
-      "Action" : "sts:AssumeRoleWithWebIdentity",
-      "Condition" : {
-        "StringEquals" : {
-          "${module.aws_eks.eks_oidc_provider}:aud" : "sts.amazonaws.com"
-          "${module.aws_eks.eks_oidc_provider}:sub" : "system:serviceaccount:kube-system:efs-csi-controller-sa"
-        }
-      }
-    }]
-  })
+module "efs_driver_iam" {
+  source = "./modules/aws_iam"
+  create_iam_policy = false
+  aws_account = var.aws_account
+  eks_oidc_provider = module.aws_eks.eks_oidc_provider
+  kubernetes_ns = "kube-system"
+  kubernetes_sa = "efs-csi-controller-sa"
+  iam_role_name = "efs_driver_role"
+  iam_policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy"
 }
 
 #external DNS
-resource "aws_iam_policy" "external_DNS_policy" {
-  name        = "AllowExternalDNSUpdates"
-  path        = "/"
-  description = "Policy for external DNS"
-  policy = file("${path.module}/json_files/externalDNSPolicy.json")
+module "external_dns_iam" {
+  source = "./modules/aws_iam"
+  aws_account = var.aws_account
+  eks_oidc_provider = module.aws_eks.eks_oidc_provider
+  kubernetes_ns = "kube-system"
+  kubernetes_sa = "external-dns"
+  iam_role_name = "external_DNS_role"
+  iam_policy_name = "AllowExternalDNSUpdates"
+  iam_policy_path = "/"
+  iam_policy_description = "Policy for external DNS"
+  iam_policy_content = file("${path.module}/json_files/externalDNSPolicy.json")
 }
 
 resource "kubernetes_service_account" "external_DNS_sa" {
@@ -88,35 +79,9 @@ resource "kubernetes_service_account" "external_DNS_sa" {
     name      = "external-dns"
     namespace = "kube-system"
     annotations = {
-      "eks.amazonaws.com/role-arn" = "arn:aws:iam::${var.aws_account}:role/${aws_iam_role.external_DNS_role.name}"
+      "eks.amazonaws.com/role-arn" = "arn:aws:iam::${var.aws_account}:role/${module.external_dns_iam.iam_role_name}"
     }
   }
-}
-
-resource "aws_iam_role" "external_DNS_role" {
-  name = "external_DNS_role"
-
-  assume_role_policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [{
-      "Effect" : "Allow",
-      "Principal" : {
-        "Federated" : "arn:aws:iam::${var.aws_account}:oidc-provider/${module.aws_eks.eks_oidc_provider}"
-      },
-      "Action" : "sts:AssumeRoleWithWebIdentity",
-      "Condition" : {
-        "StringEquals" : {
-          "${module.aws_eks.eks_oidc_provider}:aud" : "sts.amazonaws.com"
-          "${module.aws_eks.eks_oidc_provider}:sub" : "system:serviceaccount:kube-system:external-dns"
-        }
-      }
-    }]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "external_DNS_role_attach" {
-  role       = aws_iam_role.external_DNS_role.name
-  policy_arn = aws_iam_policy.external_DNS_policy.arn
 }
 
 resource "null_resource" "deploy_external_DNS" {
@@ -129,41 +94,18 @@ kubectl apply -f values/external-dns.yaml --context ${var.eks_context} -n kube-s
   }
 }
 
-
-
-
 #alb controller driver
-resource "aws_iam_policy" "alb_controller_policy" {
-  name        = "AWSLoadBalancerControllerIAMPolicy"
-  path        = "/"
-  description = "Policy for EKS ALB Controller"
-  policy = file("${path.module}/json_files/albControllerPolicy.json")
-}
-
-resource "aws_iam_role_policy_attachment" "alb_controller_role_attach" {
-  role       = aws_iam_role.alb_controller_role.name
-  policy_arn = aws_iam_policy.alb_controller_policy.arn
-}
-
-resource "aws_iam_role" "alb_controller_role" {
-  name = "alb_controller_role"
-
-  assume_role_policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [{
-      "Effect" : "Allow",
-      "Principal" : {
-        "Federated" : "arn:aws:iam::${var.aws_account}:oidc-provider/${module.aws_eks.eks_oidc_provider}"
-      },
-      "Action" : "sts:AssumeRoleWithWebIdentity",
-      "Condition" : {
-        "StringEquals" : {
-          "${module.aws_eks.eks_oidc_provider}:aud" : "sts.amazonaws.com"
-          "${module.aws_eks.eks_oidc_provider}:sub" : "system:serviceaccount:kube-system:alb-controller-sa"
-        }
-      }
-    }]
-  })
+module "alb_controller_iam" {
+  source = "./modules/aws_iam"
+  aws_account = var.aws_account
+  eks_oidc_provider = module.aws_eks.eks_oidc_provider
+  kubernetes_ns = "kube-system"
+  kubernetes_sa = "alb-controller-sa"
+  iam_role_name = "alb_controller_role"
+  iam_policy_name = "AWSLoadBalancerControllerIAMPolicy"
+  iam_policy_path = "/"
+  iam_policy_description = "Policy for EKS ALB Controller"
+  iam_policy_content = file("${path.module}/json_files/albControllerPolicy.json")
 }
 
 resource "kubernetes_service_account" "alb_controller_sa" {
@@ -172,7 +114,7 @@ resource "kubernetes_service_account" "alb_controller_sa" {
     name      = "alb-controller-sa"
     namespace = "kube-system"
     annotations = {
-      "eks.amazonaws.com/role-arn" = "arn:aws:iam::${var.aws_account}:role/${aws_iam_role.alb_controller_role.name}"
+      "eks.amazonaws.com/role-arn" = "arn:aws:iam::${var.aws_account}:role/${module.alb_controller_iam.iam_role_name}"
     }
   }
 }

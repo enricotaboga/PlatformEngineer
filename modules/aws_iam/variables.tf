@@ -1,46 +1,83 @@
-variable "name" {
-  description = "The name of the Helm release."
-  type        = string
-}
-
-variable "repository" {
-  description = "The URL of the Helm chart repository."
-  type        = string
-}
-
-variable "chart" {
-  description = "The name of the Helm chart to deploy."
-  type        = string
-}
-
-variable "namespace" {
-  description = "The Kubernetes namespace to deploy the release into."
-  type        = string
-}
-
-variable "create_namespace" {
-  description = "Whether to create the namespace if it does not exist."
+variable "create_iam_role" {
+  description = "Whether to create the IAM role"
   type        = bool
-  default     = false
+  default     = true
 }
 
-variable "set_values" {
-  description = "A map of Helm chart values to set."
-  type = list(object({
-    name  = string
-    value = string
-  }))
-  default = []
+variable "create_iam_role_policy_attachment" {
+  description = "Whether to create the IAM role policy attachment"
+  type        = bool
+  default     = true
 }
 
-variable values {
-  type        = list(string)
-  description = "Values file path"
-  default = []
+variable "create_iam_policy" {
+  description = "Whether to create the IAM policy"
+  type        = bool
+  default     = true
 }
 
-variable helm_version {
+variable "aws_account" {
+  description = "The AWS account ID."
   type        = string
-  description = "Helm version"
-  default = ""
+  default     = ""
+}
+
+variable "eks_oidc_provider" {
+  description = "The EKS OIDC provider URL."
+  type        = string
+  default     = ""
+}
+
+variable "kubernetes_ns" {
+  description = "The Kubernetes namespace where the service account resides."
+  type        = string
+  default     = ""
+}
+
+variable "kubernetes_sa" {
+  description = "The Kubernetes service account name."
+  type        = string
+  default     = ""
+}
+
+variable "assume_role_policy" {
+  description = "Optional custom assume role policy for the IAM role."
+  type        = string
+  default     = ""
+}
+
+variable "iam_role_name" {
+  description = "The name of the IAM role for the policy attachment."
+  type        = string
+  default     = ""
+}
+
+variable "iam_policy_arn" {
+  description = "The ARN of the IAM policy to attach to the role."
+  type        = string
+  default     = ""  # Default to an empty string, handled in locals
+}
+
+variable "iam_policy_name" {
+  description = "The name of the IAM policy to create."
+  type        = string
+  default     = ""
+}
+
+variable "iam_policy_path" {
+  description = "The path for the IAM policy."
+  type        = string
+  default     = ""
+}
+
+variable "iam_policy_description" {
+  description = "The description for the IAM policy."
+  type        = string
+  default     = ""
+}
+
+variable "iam_policy_content" {
+  description = "The policy document (JSON) for the IAM policy."
+  type        = string
+  default     = ""
 }

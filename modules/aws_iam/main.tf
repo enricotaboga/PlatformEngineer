@@ -16,17 +16,23 @@ locals {
     }]
   })
 }
+  
+
 
 resource "aws_iam_role" "this" {
-  name = var.role_name
+  count              = var.create_iam_role ? 1 : 0
+  name = var.iam_role_name
   assume_role_policy = var.assume_role_policy != "" ? var.assume_role_policy : local.default_assume_role_policy
+}
 
 resource "aws_iam_role_policy_attachment" "this" {
-  role       = var.iam_role_name
-  policy_arn = var.iam_policy_arn
+  count      = var.create_iam_role_policy_attachment ? 1 : 0
+  role       = aws_iam_role.this[0].name
+  policy_arn = var.iam_policy_arn != "" ? var.iam_policy_arn : aws_iam_policy.this[0].arn
 }
 
 resource "aws_iam_policy" "this" {
+  count       = var.create_iam_policy ? 1 : 0
   name        = var.iam_policy_name
   path        = var.iam_policy_path
   description = var.iam_policy_description
